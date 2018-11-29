@@ -1,4 +1,4 @@
-package org.priyaka.cmpe220.service;
+package org.priyanka.cmpe220.service;
 
 import com.mongodb.MongoClient;
 import org.bson.types.ObjectId;

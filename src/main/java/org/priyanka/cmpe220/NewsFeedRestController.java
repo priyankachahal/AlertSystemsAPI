@@ -1,6 +1,6 @@
 package org.priyanka.cmpe220;
 
-import org.priyaka.cmpe220.service.NewsFeedService;
+import org.priyanka.cmpe220.service.NewsFeedService;
 import org.priyanka.cmpe220.dataobj.NewsDo;
 import org.priyanka.cmpe220.exceptions.DataSourceException;
 import org.priyanka.cmpe220.exceptions.InvalidNewsException;
