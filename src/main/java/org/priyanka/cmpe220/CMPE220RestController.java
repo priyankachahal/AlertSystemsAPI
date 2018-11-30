@@ -1,15 +1,16 @@
 package org.priyanka.cmpe220;
 
-import org.priyanka.cmpe220.service.NewsFeedService;
 import org.priyanka.cmpe220.dataobj.NewsDo;
+import org.priyanka.cmpe220.exceptions.AlreadyRegisteredUserException;
 import org.priyanka.cmpe220.exceptions.DataSourceException;
 import org.priyanka.cmpe220.exceptions.InvalidNewsException;
 import org.priyanka.cmpe220.exceptions.UnsupportedHexFormatException;
+import org.priyanka.cmpe220.request.AuthenticateUserRequest;
 import org.priyanka.cmpe220.request.CreateNewsRequest;
-import org.priyanka.cmpe220.response.CategoryNewsResponse;
-import org.priyanka.cmpe220.response.CreateNewsResponse;
-import org.priyanka.cmpe220.response.DeleteNewsResponse;
-import org.priyanka.cmpe220.response.GetNewsResponse;
+import org.priyanka.cmpe220.request.CreateUserProfileRequest;
+import org.priyanka.cmpe220.response.*;
+import org.priyanka.cmpe220.service.NewsFeedService;
+import org.priyanka.cmpe220.service.UserAuthenticationService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
@@ -23,20 +24,25 @@ import java.util.List;
 @ComponentScan({"org.priyaka.cmpe220.service"})
 @RestController
 @EnableAutoConfiguration
-@RequestMapping(value = "/cmp220/project/news_feed")
-public class NewsFeedRestController {
+@RequestMapping(value = "/cmp220/project")
+public class CMPE220RestController {
 
     private static final String INVALID_NEWS_ID = "Invalid News Id";
+    private static final String USER_EMAIL_ALREADY_EXISTS = "User with requested email already exists";
+
+    private UserAuthenticationService userAuthenticationService = new UserAuthenticationService() {{
+        postConstruct();
+    }};
 
     private NewsFeedService newsFeedService = new NewsFeedService() {{
         postConstruct();
     }};
 
     public static void main(String[] args) throws Exception {
-        SpringApplication.run(NewsFeedRestController.class, args);
+        SpringApplication.run(CMPE220RestController.class, args);
     }
 
-    @RequestMapping(value = "/news/{newsId}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/news_feed/news/{newsId}", method = RequestMethod.GET, produces = "application/json")
     public GetNewsResponse getNewsById(@PathVariable String newsId) {
         try {
             NewsDo newsDo = newsFeedService.getNewsById(newsId);
@@ -48,7 +54,7 @@ public class NewsFeedRestController {
         }
     }
 
-    @RequestMapping(value = "/news", method = RequestMethod.POST,
+    @RequestMapping(value = "/news_feed/news", method = RequestMethod.POST,
             consumes = "application/json", produces = "application/json")
     public CreateNewsResponse postNews(@RequestBody @Valid CreateNewsRequest createNewsRequest) {
         try {
@@ -65,7 +71,7 @@ public class NewsFeedRestController {
         }
     }
 
-    @RequestMapping(value = "/news/{newsId}", method = RequestMethod.DELETE, produces = "application/json")
+    @RequestMapping(value = "/news_feed/news/{newsId}", method = RequestMethod.DELETE, produces = "application/json")
     public DeleteNewsResponse deleteNews(@PathVariable String newsId) {
         try {
             // if no news ID exists in the delete request
@@ -92,7 +98,7 @@ public class NewsFeedRestController {
         }
     }
 
-    @RequestMapping(value = "/news/category/{category}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/news_feed/news/category/{category}", method = RequestMethod.GET, produces = "application/json")
     public CategoryNewsResponse CategorizeNews(@PathVariable String category,
                                                @RequestParam("start") int start,
                                                @RequestParam("limit") int limit) {
@@ -105,18 +111,38 @@ public class NewsFeedRestController {
             throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-}
 
-/*
-@RequestMapping(value = "/news/{pincode}", method = RequestMethod.GET, produces = "application/json")
-public CategoryNewsResponse CategorizeNews(@PathVariable String category) {
-try {
-NewsDo newsDo = newsFeedService.getNewsbyCategory(category);
-CategoryNewsResponse categorizeNewsResponse = new CategoryNewsResponse();
-categorizeNewsResponse.setNews(newsDo);
-return categorizeNewsResponse;
-} catch (DataSourceException exception ) {
-throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
+
+    @RequestMapping(value = "/user", method = RequestMethod.POST,
+            consumes = "application/json", produces = "application/json")
+    public UserRegistrationResponse registerUser(@RequestBody @Valid CreateUserProfileRequest createUserProfileRequest) {
+        try {
+            String userId = userAuthenticationService.save(createUserProfileRequest.getUserProfile());
+            if (userId != null && userId.length() > 0) {
+                UserRegistrationResponse userRegistrationResponse = new UserRegistrationResponse();
+                userRegistrationResponse.setId(userId);
+                return userRegistrationResponse;
+            } else {
+                throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (DataSourceException exception) {
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (AlreadyRegisteredUserException exception) {
+            throw new AlreadyRegisteredUserException(USER_EMAIL_ALREADY_EXISTS);
+        }
+    }
+
+    @RequestMapping(value = "/user/authenticate", method = RequestMethod.POST,
+            consumes = "application/json", produces = "application/json")
+    public AuthenticateUserResponse authenticateUser(@RequestBody @Valid AuthenticateUserRequest authenticateUserRequest) {
+        try {
+            boolean isSuccess = userAuthenticationService.isUserAuthenticated(authenticateUserRequest.getEmail(), authenticateUserRequest.getPassword());
+            AuthenticateUserResponse authenticateUserResponse = new AuthenticateUserResponse();
+            authenticateUserResponse.setSuccess(isSuccess);
+            return authenticateUserResponse;
+        } catch (DataSourceException exception) {
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
-}
-*/

@@ -1,11 +1,10 @@
 package org.priyanka.cmpe220.dataobj;
 
-import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Property;
 
-@Entity("post")
+@Entity("news")
 public class NewsDo {
 
     @Id
@@ -17,6 +16,17 @@ public class NewsDo {
     private String link;
     private String authors;
     private String short_description;
+    //private String pincode;
+
+    /*public String getPincode() {
+        return pincode;
+    }
+
+    public void setPincode(String pincode) {
+        this.pincode = pincode;
+    }
+    */
+
 
     public String getId() {
         return id;

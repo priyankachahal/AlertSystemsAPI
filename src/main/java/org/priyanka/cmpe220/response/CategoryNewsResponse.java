@@ -7,6 +7,8 @@ import java.util.List;
 public class CategoryNewsResponse {
 
 
+    private List<NewsDo> news;
+
     public List<NewsDo> getNews() {
         return news;
     }
@@ -14,7 +16,5 @@ public class CategoryNewsResponse {
     public void setNews(List<NewsDo> news) {
         this.news = news;
     }
-
-    private List<NewsDo> news;
 
 }

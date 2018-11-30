@@ -2,18 +2,20 @@ package org.priyanka.cmpe220.response;
 
 import org.priyanka.cmpe220.dataobj.NewsDo;
 
+import java.util.List;
+
 public class PincodeNewsResponse {
 
-        public NewsDo getNews() {
-            return news;
-        }
+    private List<NewsDo> news;
 
-        public void setNews(NewsDo news) {
-            this.news = news;
-        }
-
-        private NewsDo news;
-
+    public List<NewsDo> getNews() {
+        return news;
     }
+
+    public void setNews(List<NewsDo> news) {
+        this.news = news;
+    }
+
+}
 
 

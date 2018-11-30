@@ -7,8 +7,13 @@ import org.priyanka.cmpe220.dataobj.NewsDo;
 import org.priyanka.cmpe220.exceptions.DataSourceException;
 import org.priyanka.cmpe220.exceptions.UnsupportedHexFormatException;
 import org.springframework.stereotype.Component;
+
 import javax.annotation.PostConstruct;
 import java.util.List;
+
+import static org.priyanka.cmpe220.service.Constants.DB_HOST;
+import static org.priyanka.cmpe220.service.Constants.DB_NAME;
+import static org.priyanka.cmpe220.service.Constants.MORPHIA_PACKAGE;
 
 @Component("newsFeedService")
 public class NewsFeedService {
@@ -17,11 +22,11 @@ public class NewsFeedService {
 
     @PostConstruct
     public void postConstruct() {
-        String dbName = new String("hr");
-        MongoClient mongo = new MongoClient("127.0.0.1");
+        String dbName = new String(DB_NAME);
+        MongoClient mongo = new MongoClient(DB_HOST);
         Morphia morphia = new Morphia();
         morphia.createDatastore(mongo, dbName);
-        morphia.mapPackage("org.priyanka.cmpe220.dataobj");
+        morphia.mapPackage(MORPHIA_PACKAGE);
         newsDAO = new NewsDAO(NewsDo.class, mongo, morphia, dbName);
     }
 
@@ -42,5 +47,11 @@ public class NewsFeedService {
     public boolean deleteNewsById(String newsId) throws DataSourceException, UnsupportedHexFormatException {
         return newsDAO.deleteNewsById(newsId);
     }
+
+    /*
+     public List<NewsDo> getNewsbyPincode(String pincodeNo, int start, int limit) throws DataSourceException {
+         return newsDAO.getNewsByPincode(pincodeNo, start, limit);
+     }
+ */
 
 }

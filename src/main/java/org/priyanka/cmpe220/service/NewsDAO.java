@@ -74,5 +74,23 @@ public class NewsDAO extends BasicDAO<NewsDo, String> {
         return newsDoList;
     }
 
-
+/*
+public List<NewsDo> getNewsByPincode(String pincodeNo, int start, int limit) throws DataSourceException {
+        if (getDatastore() == null) {
+            throw new DataSourceException();
+        }
+        Query<NewsDo> query = getDatastore().createQuery(NewsDo.class);
+        query.and(query.criteria("pincode").equal(pincodeNo));
+        FindOptions findOptions = new FindOptions();
+        findOptions.skip(start);
+        findOptions.limit(limit);
+        MorphiaIterator<NewsDo, NewsDo> morphiaIterator = super.find(query).fetch(findOptions);
+        Iterator<NewsDo> newsDoIterator = morphiaIterator.iterator();
+        List<NewsDo> newsDoList = new ArrayList<>();
+        while (newsDoIterator.hasNext()) {
+            newsDoList.add(newsDoIterator.next());
+        }
+        return newsDoList;
+    }
+ */
 }
