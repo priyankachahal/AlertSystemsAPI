@@ -6,6 +6,8 @@ import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryResults;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import org.priyanka.cmpe220.dataobj.UserProfileDo;
 import org.priyanka.cmpe220.exceptions.DataSourceException;
 
@@ -15,24 +17,31 @@ public class UserAuthenticationDAO extends BasicDAO<UserProfileDo, String> {
         super(entityClass, mongoClient, morphia, dbName);
     }
 
-    public Key<UserProfileDo> saveUserProfile(UserProfileDo userProfileDo) throws DataSourceException {
+    public String saveUserProfile(UserProfileDo userProfileDo) throws DataSourceException {
         if (getDatastore() == null) {
             throw new DataSourceException();
         }
         Query<UserProfileDo> query = getDatastore().createQuery(UserProfileDo.class);
-        query.and(query.criteria("email").equal(userProfileDo.getEmail()));
+        query.and(query.criteria("email").equal(userProfileDo.getEmail().trim()));
         QueryResults queryResults = super.find(query);
         if (queryResults != null && queryResults.count() > 0) {
-            UserProfileDo existingUserProfile = (UserProfileDo) queryResults.get();
-            existingUserProfile.setCity(userProfileDo.getCity());
-            existingUserProfile.setName(userProfileDo.getName());
-            existingUserProfile.setPassword(userProfileDo.getPassword());
-            existingUserProfile.setPhone(userProfileDo.getPhone());
-            existingUserProfile.setStreet(userProfileDo.getStreet());
-            existingUserProfile.setZipcode(userProfileDo.getZipcode());
-            return save(existingUserProfile);
+            UserProfileDo existingUserProfileDo = (UserProfileDo) queryResults.get();
+            Query<UserProfileDo> updateQuery = getDatastore().createQuery(UserProfileDo.class).field("email").equal(userProfileDo.getEmail().trim());
+            UpdateOperations<UserProfileDo> ops = getDatastore().createUpdateOperations(UserProfileDo.class)
+                    .set("city", userProfileDo.getCity())
+                    .set("name", userProfileDo.getName())
+                    .set("password", userProfileDo.getPassword())
+                    .set("phone", userProfileDo.getPhone())
+                    .set("street", userProfileDo.getStreet())
+                    .set("zipcode", userProfileDo.getZipcode());
+            UpdateResults updateResults = getDatastore().update(updateQuery, ops);
+            if (updateResults.getUpdatedCount() > 0) {
+                return String.valueOf(existingUserProfileDo.getId());
+            }
+            throw new DataSourceException();
         } else {
-            return save(userProfileDo);
+            Key<UserProfileDo> userProfileDoKey = save(userProfileDo);
+            return String.valueOf(userProfileDoKey.getId());
         }
     }
 

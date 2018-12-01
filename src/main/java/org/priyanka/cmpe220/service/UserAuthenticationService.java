@@ -29,8 +29,7 @@ public class UserAuthenticationService {
     }
 
     public String save(UserProfileDo userProfileDo) throws DataSourceException {
-        Key<UserProfileDo> userProfileDoKey = userAuthenticationDAO.saveUserProfile(userProfileDo);
-        return String.valueOf(userProfileDoKey.getId());
+        return userAuthenticationDAO.saveUserProfile(userProfileDo);
     }
 
     public UserProfileDo getAuthenticatedUser(String email, String password) throws DataSourceException {

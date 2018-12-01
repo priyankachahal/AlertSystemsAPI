@@ -8,6 +8,7 @@ import org.priyanka.cmpe220.exceptions.UnsupportedHexFormatException;
 import org.priyanka.cmpe220.request.AuthenticateUserRequest;
 import org.priyanka.cmpe220.request.CreateNewsRequest;
 import org.priyanka.cmpe220.request.CreateUserProfileRequest;
+import org.priyanka.cmpe220.request.UpdateNewsRequest;
 import org.priyanka.cmpe220.response.*;
 import org.priyanka.cmpe220.service.NewsFeedService;
 import org.priyanka.cmpe220.service.UserAuthenticationService;
@@ -28,7 +29,6 @@ import java.util.List;
 public class CMPE220RestController {
 
     private static final String INVALID_NEWS_ID = "Invalid News Id";
-    private static final String USER_EMAIL_ALREADY_EXISTS = "User with requested email already exists";
 
     private UserAuthenticationService userAuthenticationService = new UserAuthenticationService() {{
         postConstruct();
@@ -71,21 +71,20 @@ public class CMPE220RestController {
         }
     }
 
-    @RequestMapping(value = "/news_feed/news/{newsId}", method = RequestMethod.DELETE, produces = "application/json")
-    public DeleteNewsResponse deleteNews(@PathVariable String newsId) {
+    @RequestMapping(value = "/news_feed/news", method = RequestMethod.PUT, produces = "application/json")
+    public UpdateNewsResponse updateNews(@RequestBody @Valid UpdateNewsRequest updateNewsRequest) {
         try {
             // if no news ID exists in the delete request
-            if (newsId == null || newsId.length() == 0) {
+            if (updateNewsRequest == null || updateNewsRequest.getNewsId() == null) {
                 throw new InvalidNewsException(INVALID_NEWS_ID);
             }
             // try deleting by request id
-            boolean isSuccess = newsFeedService.deleteNewsById(newsId);
-
+            String newsId = newsFeedService.updateNewsById(updateNewsRequest.getNewsId(), updateNewsRequest.getDescription());
             // if success then we are done
-            if (isSuccess) {
-                DeleteNewsResponse deleteNewsResponse = new DeleteNewsResponse();
-                deleteNewsResponse.setNewsId(newsId);
-                return deleteNewsResponse;
+            if (newsId != null) {
+                UpdateNewsResponse updateNewsResponse = new UpdateNewsResponse();
+                updateNewsResponse.setNewsId(newsId);
+                return updateNewsResponse;
             } else {
                 // else the Id doesn't exists in the data base
                 throw new InvalidNewsException(INVALID_NEWS_ID);
@@ -98,12 +97,14 @@ public class CMPE220RestController {
         }
     }
 
-    @RequestMapping(value = "/news_feed/news/category/{category}", method = RequestMethod.GET, produces = "application/json")
-    public CategoryNewsResponse CategorizeNews(@PathVariable String category,
+    @RequestMapping(value = "/news_feed/news/category", method = RequestMethod.GET, produces = "application/json")
+    public CategoryNewsResponse getNewsByCategory(@RequestParam(value = "category", required = false) String category,
+                                               @RequestParam(value = "filter_time", required = false) String filterTime,
                                                @RequestParam("start") int start,
-                                               @RequestParam("limit") int limit) {
+                                               @RequestParam("limit") int limit,
+                                               @RequestParam(value = "sort", required = false) String sortOrder) {
         try {
-            List<NewsDo> newsDo = newsFeedService.getNewsbyCategory(category, start, limit);
+            List<NewsDo> newsDo = newsFeedService.getNewsbyCategory(category, filterTime, sortOrder, start, limit);
             CategoryNewsResponse categoryNewsResponse = new CategoryNewsResponse();
             categoryNewsResponse.setNews(newsDo);
             return categoryNewsResponse;

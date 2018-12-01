@@ -40,18 +40,27 @@ public class NewsFeedService {
         return String.valueOf(newsDoKey.getId());
     }
 
-    public List<NewsDo> getNewsbyCategory(String categoryName, int start, int limit) throws DataSourceException {
-        return newsDAO.getNewsByCategory(categoryName, start, limit);
+    public List<NewsDo> getNewsbyCategory(String categoryName, String filterTime, String sortOrder, int start, int limit) throws DataSourceException {
+        Integer filterMinutes = getLastMinutes(filterTime);
+        return newsDAO.getNewsByCategory(categoryName,  filterMinutes, sortOrder, start, limit);
     }
 
-    public boolean deleteNewsById(String newsId) throws DataSourceException, UnsupportedHexFormatException {
-        return newsDAO.deleteNewsById(newsId);
+    public String updateNewsById(String newsId, String description) throws DataSourceException, UnsupportedHexFormatException {
+        return newsDAO.updateNewsById(newsId, description);
     }
 
-    /*
-     public List<NewsDo> getNewsbyPincode(String pincodeNo, int start, int limit) throws DataSourceException {
-         return newsDAO.getNewsByPincode(pincodeNo, start, limit);
-     }
- */
+    private Integer getLastMinutes(String filterTime) {
+        if (filterTime == null) {
+            return null;
+        } else {
+            try {
+                //last_min:" + latest_time
+                return Integer.parseInt(filterTime.split(":")[1]);
+            } catch (NumberFormatException ex) {
+                System.err.println(ex);
+            }
+        }
+        return null;
+    }
 
 }

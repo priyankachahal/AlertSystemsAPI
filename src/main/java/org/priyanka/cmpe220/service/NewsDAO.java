@@ -5,18 +5,17 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.dao.BasicDAO;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
-import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.*;
 import org.priyanka.cmpe220.dataobj.NewsDo;
+import org.priyanka.cmpe220.dataobj.UserProfileDo;
 import org.priyanka.cmpe220.exceptions.DataSourceException;
 import org.priyanka.cmpe220.exceptions.UnsupportedHexFormatException;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class NewsDAO extends BasicDAO<NewsDo, String> {
+
+    static final long ONE_MINUTE_IN_MILLIS = 60000; //millisecs
 
     public NewsDAO(Class<NewsDo> entityClass, MongoClient mongoClient, Morphia morphia, String dbName) {
         super(entityClass, mongoClient, morphia, dbName);
@@ -35,52 +34,61 @@ public class NewsDAO extends BasicDAO<NewsDo, String> {
         if (getDatastore() == null) {
             throw new DataSourceException();
         }
+        Calendar date = Calendar.getInstance();
+        long t = date.getTimeInMillis();
+        newsDo.setCreationDate(new Date(t));
         return save(newsDo);
     }
 
-    public boolean deleteNewsById(String newsId) throws DataSourceException, UnsupportedHexFormatException {
+    public String updateNewsById(String newsId, String description) throws DataSourceException, UnsupportedHexFormatException {
         try {
             ObjectId objectId = new ObjectId(newsId);
             if (getDatastore() == null) {
                 throw new DataSourceException();
             }
-            NewsDo newsDo = getDatastore().get(NewsDo.class, objectId);
-            if (newsDo == null) {
-                return false;
+            NewsDo existingNewsDo = getDatastore().get(NewsDo.class, objectId);
+            if (existingNewsDo == null) {
+                return null;
             } else {
-                getDatastore().delete(NewsDo.class, objectId);
+                Calendar date = Calendar.getInstance();
+                long t = date.getTimeInMillis();
+                Query<NewsDo> updateQuery = getDatastore().createQuery(NewsDo.class).field("_id").equal(objectId);
+                UpdateOperations<NewsDo> ops = getDatastore().createUpdateOperations(NewsDo.class)
+                        .set("description", description)
+                        .set("creationDate", new Date(t));
+                UpdateResults updateResults = getDatastore().update(updateQuery, ops);
+                if (updateResults.getUpdatedCount() > 0) {
+                    return String.valueOf(existingNewsDo.getId());
+                }
+                throw new DataSourceException();
             }
-            return true;
         } catch (IllegalArgumentException exception) {
             throw new UnsupportedHexFormatException();
         }
     }
 
-    public List<NewsDo> getNewsByCategory(String categoryName, int start, int limit) throws DataSourceException {
+    public List<NewsDo> getNewsByCategory(String categoryName, Integer filterTime, String sort,
+                                          int start, int limit) throws DataSourceException {
         if (getDatastore() == null) {
             throw new DataSourceException();
         }
         Query<NewsDo> query = getDatastore().createQuery(NewsDo.class);
-        query.and(query.criteria("category").equal(categoryName));
-        FindOptions findOptions = new FindOptions();
-        findOptions.skip(start);
-        findOptions.limit(limit);
-        MorphiaIterator<NewsDo, NewsDo> morphiaIterator = super.find(query).fetch(findOptions);
-        Iterator<NewsDo> newsDoIterator = morphiaIterator.iterator();
-        List<NewsDo> newsDoList = new ArrayList<>();
-        while (newsDoIterator.hasNext()) {
-            newsDoList.add(newsDoIterator.next());
+        if (categoryName != null) {
+            query.and(query.criteria("category").equal(categoryName));
         }
-        return newsDoList;
-    }
+        // filter by last minutes
+        if (filterTime != null) {
+            Calendar date = Calendar.getInstance();
+            long t = date.getTimeInMillis();
+            Date filteredDate = new Date(t - (filterTime * ONE_MINUTE_IN_MILLIS));
+            query.and(query.criteria("creationDate").greaterThan(filteredDate));
+        }
 
-/*
-public List<NewsDo> getNewsByPincode(String pincodeNo, int start, int limit) throws DataSourceException {
-        if (getDatastore() == null) {
-            throw new DataSourceException();
+        // sort by creation date
+        if (sort != null) {
+            query.order(sort);
         }
-        Query<NewsDo> query = getDatastore().createQuery(NewsDo.class);
-        query.and(query.criteria("pincode").equal(pincodeNo));
+
         FindOptions findOptions = new FindOptions();
         findOptions.skip(start);
         findOptions.limit(limit);
@@ -92,5 +100,4 @@ public List<NewsDo> getNewsByPincode(String pincodeNo, int start, int limit) thr
         }
         return newsDoList;
     }
- */
 }
