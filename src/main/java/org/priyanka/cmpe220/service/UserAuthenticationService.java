@@ -4,7 +4,6 @@ import com.mongodb.MongoClient;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.Morphia;
 import org.priyanka.cmpe220.dataobj.UserProfileDo;
-import org.priyanka.cmpe220.exceptions.AlreadyRegisteredUserException;
 import org.priyanka.cmpe220.exceptions.DataSourceException;
 import org.springframework.stereotype.Component;
 
@@ -29,13 +28,13 @@ public class UserAuthenticationService {
         userAuthenticationDAO = new UserAuthenticationDAO(UserProfileDo.class, mongo, morphia, dbName);
     }
 
-    public String save(UserProfileDo userProfileDo) throws DataSourceException, AlreadyRegisteredUserException {
+    public String save(UserProfileDo userProfileDo) throws DataSourceException {
         Key<UserProfileDo> userProfileDoKey = userAuthenticationDAO.saveUserProfile(userProfileDo);
         return String.valueOf(userProfileDoKey.getId());
     }
 
-    public boolean isUserAuthenticated(String email, String password) throws DataSourceException {
-        return userAuthenticationDAO.isUserAuthenticated(email, password);
+    public UserProfileDo getAuthenticatedUser(String email, String password) throws DataSourceException {
+        return userAuthenticationDAO.getAuthenticatedUser(email, password);
     }
 
 }

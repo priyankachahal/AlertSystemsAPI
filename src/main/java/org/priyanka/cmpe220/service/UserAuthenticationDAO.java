@@ -7,7 +7,6 @@ import org.mongodb.morphia.dao.BasicDAO;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryResults;
 import org.priyanka.cmpe220.dataobj.UserProfileDo;
-import org.priyanka.cmpe220.exceptions.AlreadyRegisteredUserException;
 import org.priyanka.cmpe220.exceptions.DataSourceException;
 
 public class UserAuthenticationDAO extends BasicDAO<UserProfileDo, String> {
@@ -16,7 +15,7 @@ public class UserAuthenticationDAO extends BasicDAO<UserProfileDo, String> {
         super(entityClass, mongoClient, morphia, dbName);
     }
 
-    public Key<UserProfileDo> saveUserProfile(UserProfileDo userProfileDo) throws DataSourceException, AlreadyRegisteredUserException {
+    public Key<UserProfileDo> saveUserProfile(UserProfileDo userProfileDo) throws DataSourceException {
         if (getDatastore() == null) {
             throw new DataSourceException();
         }
@@ -24,12 +23,20 @@ public class UserAuthenticationDAO extends BasicDAO<UserProfileDo, String> {
         query.and(query.criteria("email").equal(userProfileDo.getEmail()));
         QueryResults queryResults = super.find(query);
         if (queryResults != null && queryResults.count() > 0) {
-            throw new AlreadyRegisteredUserException();
+            UserProfileDo existingUserProfile = (UserProfileDo) queryResults.get();
+            existingUserProfile.setCity(userProfileDo.getCity());
+            existingUserProfile.setName(userProfileDo.getName());
+            existingUserProfile.setPassword(userProfileDo.getPassword());
+            existingUserProfile.setPhone(userProfileDo.getPhone());
+            existingUserProfile.setStreet(userProfileDo.getStreet());
+            existingUserProfile.setZipcode(userProfileDo.getZipcode());
+            return save(existingUserProfile);
+        } else {
+            return save(userProfileDo);
         }
-        return save(userProfileDo);
     }
 
-    public boolean isUserAuthenticated(String email, String password) throws DataSourceException {
+    public UserProfileDo getAuthenticatedUser(String email, String password) throws DataSourceException {
         if (getDatastore() == null) {
             throw new DataSourceException();
         }
@@ -38,9 +45,9 @@ public class UserAuthenticationDAO extends BasicDAO<UserProfileDo, String> {
         query.and(query.criteria("password").equal(password));
         QueryResults queryResults = super.find(query);
         if (queryResults != null && queryResults.count() > 0) {
-            return true;
+            return (UserProfileDo) queryResults.get();
         }
-        return false;
+        return null;
     }
 
 }

@@ -1,7 +1,7 @@
 package org.priyanka.cmpe220;
 
 import org.priyanka.cmpe220.dataobj.NewsDo;
-import org.priyanka.cmpe220.exceptions.AlreadyRegisteredUserException;
+import org.priyanka.cmpe220.dataobj.UserProfileDo;
 import org.priyanka.cmpe220.exceptions.DataSourceException;
 import org.priyanka.cmpe220.exceptions.InvalidNewsException;
 import org.priyanka.cmpe220.exceptions.UnsupportedHexFormatException;
@@ -127,8 +127,6 @@ public class CMPE220RestController {
             }
         } catch (DataSourceException exception) {
             throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (AlreadyRegisteredUserException exception) {
-            throw new AlreadyRegisteredUserException(USER_EMAIL_ALREADY_EXISTS);
         }
     }
 
@@ -136,9 +134,14 @@ public class CMPE220RestController {
             consumes = "application/json", produces = "application/json")
     public AuthenticateUserResponse authenticateUser(@RequestBody @Valid AuthenticateUserRequest authenticateUserRequest) {
         try {
-            boolean isSuccess = userAuthenticationService.isUserAuthenticated(authenticateUserRequest.getEmail(), authenticateUserRequest.getPassword());
+            UserProfileDo userProfileDo = userAuthenticationService.getAuthenticatedUser(authenticateUserRequest.getEmail(), authenticateUserRequest.getPassword());
             AuthenticateUserResponse authenticateUserResponse = new AuthenticateUserResponse();
-            authenticateUserResponse.setSuccess(isSuccess);
+            if (userProfileDo != null) {
+                authenticateUserResponse.setSuccess(true);
+                authenticateUserResponse.setName(userProfileDo.getName());
+            } else {
+                authenticateUserResponse.setSuccess(false);
+            }
             return authenticateUserResponse;
         } catch (DataSourceException exception) {
             throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
