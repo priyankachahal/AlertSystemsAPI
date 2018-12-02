@@ -4,12 +4,14 @@ import com.mongodb.MongoClient;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.dao.BasicDAO;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.QueryResults;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
+import org.mongodb.morphia.query.*;
+import org.priyanka.cmpe220.dataobj.NewsDo;
 import org.priyanka.cmpe220.dataobj.UserProfileDo;
 import org.priyanka.cmpe220.exceptions.DataSourceException;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class UserAuthenticationDAO extends BasicDAO<UserProfileDo, String> {
 
@@ -57,6 +59,24 @@ public class UserAuthenticationDAO extends BasicDAO<UserProfileDo, String> {
             return (UserProfileDo) queryResults.get();
         }
         return null;
+    }
+
+
+    public List<UserProfileDo> getUsers(int start, int limit) throws DataSourceException {
+        if (getDatastore() == null) {
+            throw new DataSourceException();
+        }
+        Query<UserProfileDo> query = getDatastore().createQuery(UserProfileDo.class);
+        FindOptions findOptions = new FindOptions();
+        findOptions.skip(start);
+        findOptions.limit(limit);
+        MorphiaIterator<UserProfileDo, UserProfileDo> morphiaIterator = super.find(query).fetch(findOptions);
+        Iterator<UserProfileDo> userProfileDoIterator = morphiaIterator.iterator();
+        List<UserProfileDo> userProfileDos = new ArrayList<>();
+        while (userProfileDoIterator.hasNext()) {
+            userProfileDos.add(userProfileDoIterator.next());
+        }
+        return userProfileDos;
     }
 
 }

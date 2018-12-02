@@ -149,4 +149,23 @@ public class CMPE220RestController {
         }
     }
 
+
+    @RequestMapping(value = "/user", method = RequestMethod.GET,
+            consumes = "application/json", produces = "application/json")
+    public GetUsersResponse getUsers(@RequestParam("start") int start,
+                                             @RequestParam("limit") int limit) {
+        try {
+            List<UserProfileDo> userProfileDos = userAuthenticationService.getUsers(start, limit);
+            if (userProfileDos != null) {
+                GetUsersResponse getUsersResponse = new GetUsersResponse();
+                getUsersResponse.setUsers(userProfileDos);
+                return getUsersResponse;
+            } else {
+                throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (DataSourceException exception) {
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

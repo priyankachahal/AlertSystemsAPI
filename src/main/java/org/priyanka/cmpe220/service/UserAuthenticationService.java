@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
+import java.util.List;
+
 import static org.priyanka.cmpe220.service.Constants.DB_HOST;
 import static org.priyanka.cmpe220.service.Constants.DB_NAME;
 import static org.priyanka.cmpe220.service.Constants.MORPHIA_PACKAGE;
@@ -34,6 +36,10 @@ public class UserAuthenticationService {
 
     public UserProfileDo getAuthenticatedUser(String email, String password) throws DataSourceException {
         return userAuthenticationDAO.getAuthenticatedUser(email, password);
+    }
+
+    public List<UserProfileDo> getUsers(int start, int limit) throws DataSourceException {
+        return userAuthenticationDAO.getUsers(start, limit);
     }
 
 }
